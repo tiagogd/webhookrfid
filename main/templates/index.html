@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitor RFID Local</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        h2 { color: #333; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #007BFF; color: white; }
+        /* Animação para destacar novas linhas */
+        .nova-linha { animation: highlight 1.5s ease-out; }
+        @keyframes highlight { 
+            from { background-color: #ffff99; } 
+            to { background-color: white; } 
+        }
+    </style>
+</head>
+<body>
+
+    <h2>📡 Leituras em Tempo Real</h2>
+    
+    <div style="margin-bottom: 10px; text-align: right;">
+        <button onclick="copiarTabela()" style="padding: 10px 20px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 4px; font-weight: bold;">
+        📋 Copiar para Excel
+        </button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>EPC Hex</th>
+                <th>Nome do Leitor</th>
+                <th>Origem (Webhook)</th>
+                <th>Data da Leitura</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-dados">
+            </tbody>
+    </table>
+
+    <script type="text/javascript">
+        // Conecta ao servidor Flask local
+        var socket = io();
+
+        // Fica ouvindo o evento 'nova_leitura' enviado pelo Python
+        socket.on('nova_leitura', function(dados) {
+            var tbody = document.getElementById('tabela-dados');
+            
+            // Cria uma nova linha na tabela
+            var row = tbody.insertRow(0); // Insere no topo
+            row.className = 'nova-linha';
+            
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            
+            // Preenche com os dados filtrados
+            cell1.innerHTML = `<code>${dados.epc}</code>`;
+            cell2.innerHTML = dados.leitor;
+            cell3.innerHTML = dados.origem;
+            cell4.innerHTML = dados.data;
+        });  
+            // --- NOVA FUNÇÃO DE COPIAR ---
+        function copiarTabela() {
+            const tabela = document.querySelector("table");
+            let textoCopia = "";
+
+            // 1. Pega os cabeçalhos
+            const headers = Array.from(tabela.querySelectorAll("thead th"));
+            textoCopia += headers.map(th => th.innerText).join("\t") + "\n";
+
+            // 2. Pega as linhas do corpo
+            const rows = Array.from(tabela.querySelectorAll("tbody tr"));
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll("td"));
+                // Junta as células com TAB (\t) e quebra linha no final (\n)
+                textoCopia += cells.map(td => td.innerText).join("\t") + "\n";
+            });
+
+            // 3. Escreve na área de transferência
+            navigator.clipboard.writeText(textoCopia).then(() => {
+                alert("Dados copiados! Pode colar no Excel.");
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                alert("Erro ao copiar. Veja o console.");
+            });
+        }        
+    </script>
+
+</body>
+</html>
