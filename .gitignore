@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 leituras.txt
 .DS_Store
+server.py
