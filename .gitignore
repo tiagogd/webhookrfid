@@ -4,3 +4,4 @@ __pycache__/
 leituras.txt
 .DS_Store
 server.py
+main/
